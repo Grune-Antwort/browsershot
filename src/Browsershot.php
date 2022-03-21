@@ -829,14 +829,23 @@ class Browsershot
         $nodeBinary = $this->nodeBinary ?: 'node';
 
         $binPath = $this->binPath ?: __DIR__.'/../bin/browser.js';
+        $binPathWin = $this->binPath ?: __DIR__.'/../bin/browser-win.js';
 
-        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+        if( strtoupper( substr( PHP_OS, 0, 3 ) ) === 'WIN' ) {
+            if( $this->writeOptionsToFile ) {
+                $temporaryOptionsFile  = $this->createTemporaryOptionsFile( json_encode( $command ) );
+                $wronglyEscapedCommand = '-f '. $temporaryOptionsFile;
+            }
+            else {
+                $wronglyEscapedCommand = json_encode( $command );
+            }
+
             $fullCommand =
-                $nodeBinary.' '
-                .escapeshellarg($binPath).' '
-                .'"'.str_replace('"', '\"', (json_encode($command))).'"';
+                $nodeBinary . ' '
+                . escapeshellarg( $binPathWin ) . ' '
+                . '"' . base64_encode( $wronglyEscapedCommand ) . '""';
 
-            return escapeshellcmd($fullCommand);
+            return escapeshellcmd( $fullCommand );
         }
 
         $setIncludePathCommand = "PATH={$this->includePath}";
